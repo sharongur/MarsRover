@@ -10,35 +10,43 @@ import com.sharongur.marsrover.handler.Handler;
 import com.sharongur.marsrover.handler.KeyInput;
 import com.sharongur.marsrover.model.GameObject;
 import com.sharongur.marsrover.model.Obstacle;
+import com.sharongur.marsrover.model.Render;
 import com.sharongur.marsrover.model.Rover;
+import com.sharongur.marsrover.model.State;
 import com.sharongur.marsrover.model.Type;
 
-public class Game extends Canvas implements Runnable {
+public class Game extends Canvas implements Runnable,Render {
 
 	private static final long serialVersionUID = 1127822139570571210L;
 
-	public static float WIDTH = 640, HEIGHT = WIDTH / 12 * 9 ,  TEXT_HEIGHT = 32;
+	public static float WIDTH = 640, HEIGHT = WIDTH / 12 * 9 ,  TEXT_HEIGHT = 31;
 	public static int MAP_X, MAP_Y;
+	public State gameState = State.Game;
 	
 	private Thread thread;
 	private boolean running = false;
 	private int[][] obstacleMap;
+	private Menu menu;
+	private HUD hud;
 	
 	Handler handler;
 	
 	public Game(){
 		handler = new Handler();
+		menu = new Menu();
+		hud = new HUD();
 		this.addKeyListener(new KeyInput(handler));
 		Scanner reader = new Scanner(System.in);
 		System.out.println("Please Choose the Map sizes (EG - 10 10)");
 		MAP_X = reader.nextInt();
 		MAP_Y = reader.nextInt();
 		obstacleMap = new int[MAP_X][MAP_Y];
+		gameState = State.Game;
 		
 		
 		// we set the rover size in relation to our window size
-		int roverWidth =  (int) ((WIDTH)/ (MAP_X)); 
-		int roverHeight = (int) ((HEIGHT - TEXT_HEIGHT) / (MAP_Y));
+		float roverWidth =   ((WIDTH)/ (MAP_X)); 
+		float roverHeight = ((HEIGHT - TEXT_HEIGHT) / (MAP_Y));
 		
 		addObstaclePhase(reader);
 			
@@ -48,14 +56,100 @@ public class Game extends Canvas implements Runnable {
 		for (int i = 0; i < MAP_X; i++) {
 			for (int j = 0; j < MAP_Y; j++) {
 				if(obstacleMap[i][j] == 1){
-					handler.addObject(new Obstacle((i)*roverWidth, (j)*roverHeight + (int)TEXT_HEIGHT, Type.Obstacle, roverWidth, roverHeight));
+					handler.addObject(new Obstacle((i)*roverWidth, (j)*roverHeight + (int)TEXT_HEIGHT, Type.Obstacle, roverWidth -2, roverHeight-2));
 				}
 			}
 		}
 	}
 	
 
-	private void addObstaclePhase(Scanner reader) {
+	
+	public void start(){
+		thread = new Thread(this);
+		thread.start();
+		running = true;
+	}
+	
+	public void stop(){
+		try{
+			thread.join();
+			running = false;
+		}catch (Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	public void run() {
+		this.requestFocus();
+		long lastTime = System.nanoTime();
+		double amountOfTicks = 64.0;
+		double ns = 1000000000 / amountOfTicks;
+		double delta = 0;
+		long timer = System.currentTimeMillis();
+		int frames = 0;
+	
+		while (running){
+			long now = System.nanoTime();
+			delta+= (now - lastTime) / ns;
+			lastTime = now;
+			while (delta >=1){
+				tick();
+				delta--;
+			}
+			if(running){
+				render(null);
+				}
+			frames++;
+			
+			if(System.currentTimeMillis() - timer > 1000){
+				timer += 1000;
+				//System.out.println("FPS: " + frames);
+				frames = 0;
+			}
+		}
+		stop();
+	}
+	@Override
+	public void tick(){
+		handler.tick();
+		if(gameState == State.Game){
+			hud.tick();
+		}else{
+			menu.tick();
+		}
+	}
+	
+	@Override
+	public void render(Graphics g){
+		BufferStrategy bs = this.getBufferStrategy();
+		if(bs == null){
+			this.createBufferStrategy(3);
+			return;
+		}
+		
+		g = bs.getDrawGraphics();
+		
+		g.setColor(Color.black);
+		g.fillRect(0, 0, (int)WIDTH, (int)HEIGHT);
+		g.setColor(Color.white);
+		g.drawLine(0, (int)TEXT_HEIGHT,(int) WIDTH, 32);
+		
+		handler.render(g);
+		if(gameState == State.Menu){
+			menu.render(g);
+		}else{
+			hud.render(g);
+		}
+		g.dispose();
+
+		bs.show();
+		}
+
+	public static void main(String[] args) {
+		new Game();
+	}
+	
+private void addObstaclePhase(Scanner reader) {
 		
 		addObstacle(reader);
 		
@@ -107,76 +201,16 @@ public class Game extends Canvas implements Runnable {
 		}
 		return true;
 	}
+	
+	public static int clamp(int var, int min, int max){
+		if( var >= max)
+			return max;
+		else if ( var <= min)
+			return min;
+		else
+			return var;
+	}
 
 
-	public void start(){
-		thread = new Thread(this);
-		thread.start();
-		running = true;
-	}
-	
-	public void stop(){
-		try{
-			thread.join();
-			running = false;
-		}catch (Exception e){
-			e.printStackTrace();
-		}
-	}
-	
-	public void run() {
-		long lastTime = System.nanoTime();
-		double amountOfTicks = 64.0;
-		double ns = 1000000000 / amountOfTicks;
-		double delta = 0;
-		long timer = System.currentTimeMillis();
-		int frames = 0;
-		while (running){
-			long now = System.nanoTime();
-			delta+= (now - lastTime) / ns;
-			lastTime = now;
-			while (delta >=1){
-				tick();
-				delta--;
-			}
-			if(running)
-				render();
-			frames++;
-			
-			if(System.currentTimeMillis() - timer > 1000){
-				timer += 1000;
-				//System.out.println("FPS: " + frames);
-				frames = 0;
-			}
-		}
-		stop();
-	}
-	
-	private void tick(){
-		handler.tick();
-	}
-	private void render(){
-		BufferStrategy bs = this.getBufferStrategy();
-		if(bs == null){
-			this.createBufferStrategy(3);
-			return;
-		}
-		
-		Graphics g = bs.getDrawGraphics();
-		
-		g.setColor(Color.black);
-		g.fillRect(0, 0, (int)WIDTH, (int)HEIGHT);
-		g.setColor(Color.white);
-		g.drawLine(0, (int)TEXT_HEIGHT,(int) WIDTH, 32);
-		
-		handler.render(g);
-		
-		g.dispose();
-		bs.show();
-		}
-	
-	public static void main(String[] args) {
-		new Game();
-	}
 
 }

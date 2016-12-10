@@ -5,6 +5,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 import com.sharongur.marsrover.main.Game;
+import com.sharongur.marsrover.main.HUD;
 import com.sharongur.marsrover.model.Direction;
 import com.sharongur.marsrover.model.GameObject;
 import com.sharongur.marsrover.model.Rover;
@@ -94,14 +95,14 @@ public class KeyInput extends KeyAdapter {
 		case Left:
 			moveTo = rover.getXPosition()-(rover.getWidth()*ForwardBackwards);
 			handledMoveTo = handleMoveOutOfBounds(moveTo, roverWidth, roverHeight, true);
-			if(!collision(rover.getYPosition(),handledMoveTo, rover)){
+			if(!collision(handledMoveTo, rover.getYPosition(), rover)){
 				rover.setXPosition(handledMoveTo);
 			}
 			break;
 		case Right:
 			moveTo = rover.getXPosition()+(rover.getWidth()*ForwardBackwards);
 			handledMoveTo = handleMoveOutOfBounds(moveTo, roverWidth, roverHeight, true);
-			if(!collision(rover.getYPosition(),handledMoveTo, rover)){
+			if(!collision(handledMoveTo, rover.getYPosition(), rover)){
 				rover.setXPosition(handledMoveTo);
 			}
 			break;
@@ -118,6 +119,7 @@ public class KeyInput extends KeyAdapter {
 																	(int)(yPosition ),
 																	(int)rover.getWidth(),(int)rover.getHeight()))){
 					System.out.println("The Rovers Sensors Detect an Obstacle Ahead. Move Order Cancled");
+					HUD.HEALTH -= 10;
 					return true;
 				}
 			}

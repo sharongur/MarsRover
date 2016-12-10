@@ -1,15 +1,13 @@
 package com.sharongur.marsrover.model;
 
-import java.awt.Graphics;
 import java.awt.Rectangle;
 
-public abstract class GameObject { 
+public abstract class GameObject implements Render { 
 
 	protected  float xPosition, yPosition, width, height;
 	protected Type type;
 
-	public abstract void tick();
-	public abstract void render(Graphics g);
+	
 	
 	public Rectangle getBounds() {
 		return new Rectangle((int)xPosition,(int)yPosition,(int)width,(int)height);
