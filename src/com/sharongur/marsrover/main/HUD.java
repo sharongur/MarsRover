@@ -8,8 +8,9 @@ import com.sharongur.marsrover.model.Render;
 public class HUD implements Render{
 
 	public static int HEALTH = 100;
-	
+	public boolean displayText = false;
 	private int greenValue = 255;
+	
 	
 	@Override
 	public void tick() {
@@ -26,8 +27,11 @@ public class HUD implements Render{
 		g.fillRect((int)Game.TEXT_HEIGHT / 4, (int)Game.TEXT_HEIGHT / 4, HEALTH * 2, 16);
 		g.setColor(Color.white);
 		g.drawRect((int)Game.TEXT_HEIGHT / 4, (int)Game.TEXT_HEIGHT / 4, 200, 16);
-		
-		
+	
+	}
+
+	public void displayCollisionText() {
+				
 	}
 
 }

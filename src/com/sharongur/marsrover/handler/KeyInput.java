@@ -9,6 +9,7 @@ import com.sharongur.marsrover.main.HUD;
 import com.sharongur.marsrover.model.Direction;
 import com.sharongur.marsrover.model.GameObject;
 import com.sharongur.marsrover.model.Rover;
+import com.sharongur.marsrover.model.State;
 import com.sharongur.marsrover.model.Type;
 
 public class KeyInput extends KeyAdapter {
@@ -45,99 +46,34 @@ public class KeyInput extends KeyAdapter {
 			if(tempObject.getType() == Type.Rover){
 				Direction roverDirection;
 				Direction newDirection;
-				
-				switch (key){
-				case KeyEvent.VK_UP:
-					moveRover((Rover)tempObject, forward);
-					break;
-				case KeyEvent.VK_DOWN:
-					moveRover((Rover)tempObject, backward);
-					break;
-				case KeyEvent.VK_LEFT:
-					roverDirection = ((Rover) tempObject).getDirection();
-					System.out.println("Rover Direction: " + roverDirection);
-					newDirection = getDirectionFromDegrees(roverDirection.getValue() - 90);
-					System.out.println("New Rover Direction: " + newDirection);
-					((Rover) tempObject).setDirection(newDirection);
-					break;
-				case KeyEvent.VK_RIGHT:
-					roverDirection = ((Rover) tempObject).getDirection();
-					System.out.println("Rover Direction: " + roverDirection);
-					newDirection = getDirectionFromDegrees(roverDirection.getValue() + 90);
-					System.out.println("New Rover Direction: " + newDirection);
-					((Rover) tempObject).setDirection(newDirection);
-					break;
+				if(Game.gameState == State.Game){
+					switch (key){
+					case KeyEvent.VK_UP:
+						((Rover)tempObject).move(forward);
+						break;
+					case KeyEvent.VK_DOWN:
+						((Rover)tempObject).move(backward);
+						break;
+					case KeyEvent.VK_LEFT:
+						roverDirection = ((Rover) tempObject).getDirection();
+						System.out.println("Rover Direction: " + roverDirection);
+						newDirection = getDirectionFromDegrees(roverDirection.getValue() - 90);
+						System.out.println("New Rover Direction: " + newDirection);
+						((Rover) tempObject).setDirection(newDirection);
+						break;
+					case KeyEvent.VK_RIGHT:
+						roverDirection = ((Rover) tempObject).getDirection();
+						System.out.println("Rover Direction: " + roverDirection);
+						newDirection = getDirectionFromDegrees(roverDirection.getValue() + 90);
+						System.out.println("New Rover Direction: " + newDirection);
+						((Rover) tempObject).setDirection(newDirection);
+						break;
+					case KeyEvent.VK_ESCAPE:
+						Game.gameState = State.Menu;
+					}
 				}
 			}
 		}
-	}
-	
-	private void moveRover(Rover rover,int ForwardBackwards){
-		Direction roverDirection = (rover.getDirection());
-		float roverWidth = (rover.getWidth());
-		float roverHeight = (rover.getHeight());		
-		float moveTo, handledMoveTo;
-		switch (roverDirection){
-		case Up:
-			moveTo = rover.getYPosition()-(rover.getHeight()*ForwardBackwards);
-			handledMoveTo = handleMoveOutOfBounds(moveTo, roverWidth, roverHeight, false);
-			if(!collision(rover.getXPosition(),handledMoveTo, rover)){
-				rover.setYPosition(handledMoveTo);
-			}
-			break;
-		case Down:
-			moveTo = rover.getYPosition()+(rover.getHeight()*ForwardBackwards);
-			handledMoveTo = handleMoveOutOfBounds(moveTo, roverWidth, roverHeight, false);
-			if(!collision(rover.getXPosition(),handledMoveTo, rover)){
-				rover.setYPosition(handledMoveTo);
-			}
-			break;
-		case Left:
-			moveTo = rover.getXPosition()-(rover.getWidth()*ForwardBackwards);
-			handledMoveTo = handleMoveOutOfBounds(moveTo, roverWidth, roverHeight, true);
-			if(!collision(handledMoveTo, rover.getYPosition(), rover)){
-				rover.setXPosition(handledMoveTo);
-			}
-			break;
-		case Right:
-			moveTo = rover.getXPosition()+(rover.getWidth()*ForwardBackwards);
-			handledMoveTo = handleMoveOutOfBounds(moveTo, roverWidth, roverHeight, true);
-			if(!collision(handledMoveTo, rover.getYPosition(), rover)){
-				rover.setXPosition(handledMoveTo);
-			}
-			break;
-		default:
-			break;
-		}
-	}
-	
-	private boolean collision(float xPosition, float yPosition, Rover rover) {
-		for (int i = 0; i < handler.objects.size(); i++) {
-			GameObject tempObject = handler.objects.get(i);
-			if(tempObject.getType() == Type.Obstacle){
-				if(tempObject.getBounds().intersects(new Rectangle(	(int)(xPosition ),
-																	(int)(yPosition ),
-																	(int)rover.getWidth(),(int)rover.getHeight()))){
-					System.out.println("The Rovers Sensors Detect an Obstacle Ahead. Move Order Cancled");
-					HUD.HEALTH -= 10;
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	private float handleMoveOutOfBounds(float moveTo, float roverWidth, float roverHeight, boolean isXCoor ){
-		if(moveTo > (Game.WIDTH - roverWidth) && isXCoor){
-			return 0;
-		}else if(moveTo > (Game.HEIGHT - roverHeight) && !isXCoor){
-			return Game.TEXT_HEIGHT;
-		}else if(moveTo < 0 && isXCoor){
-				return Game.WIDTH - roverWidth; 
-			}else if(moveTo < Game.TEXT_HEIGHT && !isXCoor){
-				return Game.HEIGHT - roverHeight;
-			}
-		return moveTo;
 	}
 	
 	private Direction getDirectionFromDegrees(int degrees){
@@ -155,6 +91,6 @@ public class KeyInput extends KeyAdapter {
 			case 0:
 				return Direction.Up;
 		}
-		return null;
+		return Direction.Up;
 	}
 }
